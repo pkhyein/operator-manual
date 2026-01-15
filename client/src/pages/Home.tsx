@@ -1,25 +1,23 @@
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { Streamdown } from 'streamdown';
-
 /**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Best Practices, Design Guide and Common Pitfalls
+ * Design Philosophy: Soft Minimalism
+ * - Soft indigo and light mint colors for calm, modern feel
+ * - Floating sidebar with generous spacing
+ * - Round corners and subtle shadows for depth
  */
+
+import { useState } from "react";
+import ManualLayout from "@/components/ManualLayout";
+import ContentDisplay from "@/components/ContentDisplay";
+
 export default function Home() {
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
+  const [currentSection, setCurrentSection] = useState("event-planning");
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
-      </main>
-    </div>
+    <ManualLayout
+      currentSection={currentSection}
+      onSectionChange={setCurrentSection}
+    >
+      <ContentDisplay sectionId={currentSection} />
+    </ManualLayout>
   );
 }
