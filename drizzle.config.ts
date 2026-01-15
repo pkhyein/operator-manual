@@ -1,10 +1,17 @@
 import { defineConfig } from "drizzle-kit";
 
+const isProduction = process.env.NODE_ENV === "production";
+
 export default defineConfig({
   schema: "./drizzle/schema.ts",
   out: "./drizzle",
   dialect: "sqlite",
-  dbCredentials: {
-    url: "./data.db",
-  },
+  dbCredentials: isProduction
+    ? {
+        url: process.env.TURSO_DATABASE_URL!,
+        authToken: process.env.TURSO_AUTH_TOKEN,
+      }
+    : {
+        url: "./data.db",
+      },
 });
