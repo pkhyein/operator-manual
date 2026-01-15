@@ -1,17 +1,29 @@
 import { eq, like } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import { drizzle } from "drizzle-orm/libsql";
+import { createClient } from "@libsql/client";
 import Database from "better-sqlite3";
 import { InsertUser, users, manualCategories, manualItems, files, searchLogs, manualItemImages } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db) {
     try {
-      const sqlite = new Database("./data.db");
-      _db = drizzle(sqlite);
+      const isProduction = process.env.NODE_ENV === "production";
+      
+      if (isProduction && process.env.TURSO_DATABASE_URL) {
+        // Production: Turso 사용
+        const client = createClient({
+          url: process.env.TURSO_DATABASE_URL,
+          authToken: process.env.TURSO_AUTH_TOKEN,
+        });
+        _db = drizzle(client);
+      } else {
+        // Development: 로컬 SQLite 사용
+        const sqlite = new Database("./data.db");
+        _db = drizzle(sqlite);
+      }
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -19,6 +31,7 @@ export async function getDb() {
   }
   return _db;
 }
+
 
 export async function upsertUser(user: InsertUser): Promise<void> {
   if (!user.openId) {
