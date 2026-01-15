@@ -1,5 +1,6 @@
 import { eq, like } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import Database from "better-sqlite3";
 import { InsertUser, users, manualCategories, manualItems, files, searchLogs, manualItemImages } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -7,9 +8,10 @@ let _db: ReturnType<typeof drizzle> | null = null;
 
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
-  if (!_db && process.env.DATABASE_URL) {
+  if (!_db) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      const sqlite = new Database("./data.db");
+      _db = drizzle(sqlite);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -33,7 +35,6 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     const values: InsertUser = {
       openId: user.openId,
     };
-    const updateSet: Record<string, unknown> = {};
 
     const textFields = ["name", "email", "loginMethod"] as const;
     type TextField = (typeof textFields)[number];
@@ -41,35 +42,28 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     const assignNullable = (field: TextField) => {
       const value = user[field];
       if (value === undefined) return;
-      const normalized = value ?? null;
-      values[field] = normalized;
-      updateSet[field] = normalized;
+      values[field] = value ?? null;
     };
 
     textFields.forEach(assignNullable);
 
     if (user.lastSignedIn !== undefined) {
       values.lastSignedIn = user.lastSignedIn;
-      updateSet.lastSignedIn = user.lastSignedIn;
     }
     if (user.role !== undefined) {
       values.role = user.role;
-      updateSet.role = user.role;
     } else if (user.openId === ENV.ownerOpenId) {
       values.role = 'admin';
-      updateSet.role = 'admin';
     }
 
     if (!values.lastSignedIn) {
       values.lastSignedIn = new Date();
     }
 
-    if (Object.keys(updateSet).length === 0) {
-      updateSet.lastSignedIn = new Date();
-    }
-
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
-      set: updateSet,
+    // SQLite에서는 onDuplicateKeyUpdate 대신 onConflictDoUpdate 사용
+    await db.insert(users).values(values).onConflictDoUpdate({
+      target: users.openId,
+      set: values,
     });
   } catch (error) {
     console.error("[Database] Failed to upsert user:", error);
@@ -77,6 +71,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   }
 }
 
+// 나머지 함수들은 그대로 유지
 export async function getUserByOpenId(openId: string) {
   const db = await getDb();
   if (!db) {
@@ -130,7 +125,6 @@ export async function searchManualContent(query: string) {
       .select()
       .from(manualItems)
       .where(
-        // Search in title or content
         like(manualItems.title, searchPattern)
       );
   } catch (error) {
@@ -209,7 +203,6 @@ export async function logSearch(userId: number, query: string, resultCount: numb
   }
 }
 
-
 /**
  * 카테고리 CRUD 함수
  */
@@ -252,7 +245,6 @@ export async function deleteCategory(id: number) {
   if (!db) throw new Error("Database not available");
   
   try {
-    // 카테고리 삭제 전 하위 항목들도 삭제
     await db.delete(manualItems).where(eq(manualItems.categoryId, id));
     return await db.delete(manualCategories).where(eq(manualCategories.id, id));
   } catch (error) {
@@ -310,7 +302,6 @@ export async function deleteItem(id: number) {
     throw error;
   }
 }
-
 
 /**
  * 항목 이미지 CRUD 함수
