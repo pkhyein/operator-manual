@@ -208,3 +208,105 @@ export async function logSearch(userId: number, query: string, resultCount: numb
     console.error("[Database] Failed to log search:", error);
   }
 }
+
+
+/**
+ * 카테고리 CRUD 함수
+ */
+export async function createCategory(data: { title: string; description?: string; order?: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    const result = await db.insert(manualCategories).values({
+      title: data.title,
+      description: data.description,
+      order: data.order ?? 0,
+    });
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to create category:", error);
+    throw error;
+  }
+}
+
+export async function updateCategory(id: number, data: { title?: string; description?: string; order?: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    const updateData: Record<string, any> = {};
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.order !== undefined) updateData.order = data.order;
+    
+    return await db.update(manualCategories).set(updateData).where(eq(manualCategories.id, id));
+  } catch (error) {
+    console.error("[Database] Failed to update category:", error);
+    throw error;
+  }
+}
+
+export async function deleteCategory(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    // 카테고리 삭제 전 하위 항목들도 삭제
+    await db.delete(manualItems).where(eq(manualItems.categoryId, id));
+    return await db.delete(manualCategories).where(eq(manualCategories.id, id));
+  } catch (error) {
+    console.error("[Database] Failed to delete category:", error);
+    throw error;
+  }
+}
+
+/**
+ * 항목 CRUD 함수
+ */
+export async function createItem(data: { categoryId: number; title: string; content: string; order?: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    const result = await db.insert(manualItems).values({
+      categoryId: data.categoryId,
+      title: data.title,
+      content: data.content,
+      order: data.order ?? 0,
+    });
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to create item:", error);
+    throw error;
+  }
+}
+
+export async function updateItem(id: number, data: { title?: string; content?: string; order?: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    const updateData: Record<string, any> = {};
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.content !== undefined) updateData.content = data.content;
+    if (data.order !== undefined) updateData.order = data.order;
+    
+    return await db.update(manualItems).set(updateData).where(eq(manualItems.id, id));
+  } catch (error) {
+    console.error("[Database] Failed to update item:", error);
+    throw error;
+  }
+}
+
+export async function deleteItem(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    return await db.delete(manualItems).where(eq(manualItems.id, id));
+  } catch (error) {
+    console.error("[Database] Failed to delete item:", error);
+    throw error;
+  }
+}

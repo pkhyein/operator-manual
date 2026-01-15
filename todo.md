@@ -40,3 +40,14 @@
 - [ ] 사용자 권한 관리 (admin/user)
 - [ ] 파일 버전 관리
 - [ ] 실시간 검색 분석 대시보드
+
+
+## 매뉴얼 콘텐츠 CRUD 관리 기능
+- [x] 백엔드 API 라우터 확장 (createCategory, updateCategory, deleteCategory)
+- [x] 백엔드 API 라우터 확장 (createItem, updateItem, deleteItem)
+- [x] 관리자 페이지 레이아웃 구현
+- [x] 카테고리 관리 UI 구현
+- [x] 항목 관리 UI 구현
+- [x] 폼 유효성 검사 구현
+- [x] 에러 처리 및 사용자 피드백
+- [x] CRUD 기능 테스트
