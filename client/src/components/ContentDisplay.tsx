@@ -7,6 +7,7 @@
 
 import { manualData } from "@/data/manualData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import HtmlContent from "./HtmlContent";
 
 interface ContentDisplayProps {
   sectionId: string;
@@ -36,7 +37,10 @@ export default function ContentDisplay({ sectionId }: ContentDisplayProps) {
     );
   }
 
-  // Parse markdown-style content
+  // Check if content is HTML (contains HTML tags)
+  const isHtml = /<[^>]*>/.test(currentContent);
+
+  // Parse markdown-style content (fallback for plain text)
   const renderContent = (content: string) => {
     const lines = content.split("\n");
     const elements: React.ReactElement[] = [];
@@ -124,9 +128,13 @@ export default function ContentDisplay({ sectionId }: ContentDisplayProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-8 pb-10 px-8">
-          <div className="prose prose-slate max-w-none">
-            {renderContent(currentContent)}
-          </div>
+          {isHtml ? (
+            <HtmlContent html={currentContent} className="prose prose-slate max-w-none" />
+          ) : (
+            <div className="prose prose-slate max-w-none">
+              {renderContent(currentContent)}
+            </div>
+          )}
         </CardContent>
       </Card>
 

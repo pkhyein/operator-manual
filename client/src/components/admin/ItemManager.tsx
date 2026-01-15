@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Plus, Edit2, Trash2, X, Check, Image as ImageIcon } from "lucide-react";
 import ImageUploader from "./ImageUploader";
+import HtmlEditor from "./HtmlEditor";
 
 interface Item {
   id: number;
@@ -209,14 +210,12 @@ export default function ItemManager({ onRefresh }: ItemManagerProps) {
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                항목 내용 *
+                항목 내용 (HTML) *
               </label>
-              <Textarea
-                placeholder="항목에 대한 상세한 설명을 입력하세요"
+              <HtmlEditor
                 value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                rows={5}
-                className="bg-background border-border focus:border-accent resize-none"
+                onChange={(html) => setFormData({ ...formData, content: html })}
+                placeholder="항목에 대한 상세한 설명을 작성하세요"
               />
             </div>
 
