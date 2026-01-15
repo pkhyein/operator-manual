@@ -9,7 +9,6 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -18,8 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Edit2, Trash2, X, Check, Image as ImageIcon } from "lucide-react";
-import ImageUploader from "./ImageUploader";
-import HtmlEditor from "./HtmlEditor";
+import ContentEditor from "./ContentEditor";
 
 interface Item {
   id: number;
@@ -78,6 +76,7 @@ export default function ItemManager({ onRefresh }: ItemManagerProps) {
 
   const handleAddClick = () => {
     setIsAdding(true);
+    setEditingId(null);
     setFormData({ categoryId: "", title: "", content: "" });
     setSelectedImages([]);
     setError(null);
@@ -85,6 +84,7 @@ export default function ItemManager({ onRefresh }: ItemManagerProps) {
 
   const handleEditClick = (item: Item) => {
     setEditingId(item.id);
+    setIsAdding(false);
     setFormData({
       categoryId: item.categoryId.toString(),
       title: item.title,
@@ -108,38 +108,43 @@ export default function ItemManager({ onRefresh }: ItemManagerProps) {
       return;
     }
 
-    if (isAdding) {
-      const newItem: Item = {
-        id: Math.max(...items.map((i) => i.id), 0) + 1,
-        categoryId: parseInt(formData.categoryId),
-        title: formData.title,
-        content: formData.content,
-        order: items.filter((i) => i.categoryId === parseInt(formData.categoryId)).length,
-        images: selectedImages,
-      };
-      setItems([...items, newItem]);
-    } else if (editingId) {
-      setItems(
-        items.map((i) =>
-          i.id === editingId
-            ? {
-                ...i,
-                categoryId: parseInt(formData.categoryId),
-                title: formData.title,
-                content: formData.content,
-                images: selectedImages,
-              }
-            : i
-        )
-      );
-    }
+    try {
+      if (isAdding) {
+        const newItem: Item = {
+          id: Math.max(...items.map((i) => i.id), 0) + 1,
+          categoryId: parseInt(formData.categoryId),
+          title: formData.title,
+          content: formData.content,
+          order: items.filter((i) => i.categoryId === parseInt(formData.categoryId)).length,
+          images: selectedImages,
+        };
+        setItems([...items, newItem]);
+      } else if (editingId) {
+        setItems(
+          items.map((i) =>
+            i.id === editingId
+              ? {
+                  ...i,
+                  categoryId: parseInt(formData.categoryId),
+                  title: formData.title,
+                  content: formData.content,
+                  images: selectedImages,
+                }
+              : i
+          )
+        );
+      }
 
-    setIsAdding(false);
-    setEditingId(null);
-    setFormData({ categoryId: "", title: "", content: "" });
-    setSelectedImages([]);
-    setError(null);
-    onRefresh?.();
+      setIsAdding(false);
+      setEditingId(null);
+      setFormData({ categoryId: "", title: "", content: "" });
+      setSelectedImages([]);
+      setError(null);
+      onRefresh?.();
+    } catch (err) {
+      setError("저장 중 오류가 발생했습니다. 다시 시도해주세요.");
+      console.error("Save error:", err);
+    }
   };
 
   const handleDelete = (id: number) => {
@@ -163,7 +168,7 @@ export default function ItemManager({ onRefresh }: ItemManagerProps) {
 
   return (
     <div className="space-y-6">
-      {/* Add Form */}
+      {/* Add/Edit Form */}
       {(isAdding || editingId) && (
         <Card className="rounded-2xl overflow-hidden border-accent/20 bg-accent/5">
           <CardHeader className="bg-gradient-to-br from-accent/10 to-transparent pb-4">
@@ -210,24 +215,13 @@ export default function ItemManager({ onRefresh }: ItemManagerProps) {
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                항목 내용 (HTML) *
+                항목 내용 *
               </label>
-              <HtmlEditor
+              <ContentEditor
                 value={formData.content}
-                onChange={(html) => setFormData({ ...formData, content: html })}
+                onChange={(content) => setFormData({ ...formData, content })}
+                onImagesSelected={setSelectedImages}
                 placeholder="항목에 대한 상세한 설명을 작성하세요"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                이미지 추가
-              </label>
-              <ImageUploader
-                onImagesSelected={(files) => {
-                  setSelectedImages(files);
-                }}
-                maxFiles={5}
               />
             </div>
 
@@ -237,7 +231,7 @@ export default function ItemManager({ onRefresh }: ItemManagerProps) {
               </div>
             )}
 
-            <div className="flex gap-2 justify-end">
+            <div className="flex gap-2 justify-end pt-4">
               <Button
                 variant="outline"
                 onClick={handleCancel}
@@ -282,7 +276,7 @@ export default function ItemManager({ onRefresh }: ItemManagerProps) {
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="inline-block px-2 py-1 text-xs font-medium bg-accent/10 text-accent rounded-md">
                           {getCategoryTitle(item.categoryId)}
                         </span>
@@ -297,7 +291,7 @@ export default function ItemManager({ onRefresh }: ItemManagerProps) {
                         {item.title}
                       </h3>
                       <p className="text-sm text-muted-foreground line-clamp-2">
-                        {item.content}
+                        {item.content.replace(/<[^>]*>/g, "").substring(0, 100)}...
                       </p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
