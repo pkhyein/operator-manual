@@ -17,6 +17,9 @@ interface ManualLayoutProps {
   children: React.ReactNode;
   currentSection: string;
   onSectionChange: (sectionId: string) => void;
+  user?: any;
+  isAuthenticated?: boolean;
+  logout?: () => void;
 }
 
 export default function ManualLayout({
