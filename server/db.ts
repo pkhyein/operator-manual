@@ -1,6 +1,6 @@
 import { eq, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, manualCategories, manualItems, files, searchLogs } from "../drizzle/schema";
+import { InsertUser, users, manualCategories, manualItems, files, searchLogs, manualItemImages } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -307,6 +307,67 @@ export async function deleteItem(id: number) {
     return await db.delete(manualItems).where(eq(manualItems.id, id));
   } catch (error) {
     console.error("[Database] Failed to delete item:", error);
+    throw error;
+  }
+}
+
+
+/**
+ * 항목 이미지 CRUD 함수
+ */
+export async function createItemImage(data: { itemId: number; imageKey: string; imageUrl: string; imageName: string; mimeType?: string; size?: number; order?: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    const result = await db.insert(manualItemImages).values({
+      itemId: data.itemId,
+      imageKey: data.imageKey,
+      imageUrl: data.imageUrl,
+      imageName: data.imageName,
+      mimeType: data.mimeType,
+      size: data.size,
+      order: data.order ?? 0,
+    });
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to create item image:", error);
+    throw error;
+  }
+}
+
+export async function getItemImages(itemId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  try {
+    return await db.select().from(manualItemImages).where(eq(manualItemImages.itemId, itemId)).orderBy(manualItemImages.order);
+  } catch (error) {
+    console.error("[Database] Failed to get item images:", error);
+    return [];
+  }
+}
+
+export async function deleteItemImage(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    return await db.delete(manualItemImages).where(eq(manualItemImages.id, id));
+  } catch (error) {
+    console.error("[Database] Failed to delete item image:", error);
+    throw error;
+  }
+}
+
+export async function updateItemImageOrder(id: number, order: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    return await db.update(manualItemImages).set({ order }).where(eq(manualItemImages.id, id));
+  } catch (error) {
+    console.error("[Database] Failed to update item image order:", error);
     throw error;
   }
 }

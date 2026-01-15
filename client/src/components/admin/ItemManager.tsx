@@ -17,7 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Edit2, Trash2, X, Check } from "lucide-react";
+import { Plus, Edit2, Trash2, X, Check, Image as ImageIcon } from "lucide-react";
+import ImageUploader from "./ImageUploader";
 
 interface Item {
   id: number;
@@ -25,6 +26,7 @@ interface Item {
   title: string;
   content: string;
   order: number;
+  images?: any[];
 }
 
 interface Category {
@@ -51,6 +53,7 @@ export default function ItemManager({ onRefresh }: ItemManagerProps) {
       title: "이벤트 기획",
       content: "이벤트 기획 단계에서는 목표 설정, 타겟 고객 분석, 예산 수립 등을 진행합니다.",
       order: 0,
+      images: [],
     },
     {
       id: 2,
@@ -58,6 +61,7 @@ export default function ItemManager({ onRefresh }: ItemManagerProps) {
       title: "티켓 시스템",
       content: "티켓 발권, 환불, 재발행 등 티켓 관련 전반적인 업무를 처리합니다.",
       order: 0,
+      images: [],
     },
   ]);
 
@@ -68,11 +72,13 @@ export default function ItemManager({ onRefresh }: ItemManagerProps) {
     title: "",
     content: "",
   });
+  const [selectedImages, setSelectedImages] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const handleAddClick = () => {
     setIsAdding(true);
     setFormData({ categoryId: "", title: "", content: "" });
+    setSelectedImages([]);
     setError(null);
   };
 
@@ -83,6 +89,7 @@ export default function ItemManager({ onRefresh }: ItemManagerProps) {
       title: item.title,
       content: item.content,
     });
+    setSelectedImages(item.images || []);
     setError(null);
   };
 
@@ -107,6 +114,7 @@ export default function ItemManager({ onRefresh }: ItemManagerProps) {
         title: formData.title,
         content: formData.content,
         order: items.filter((i) => i.categoryId === parseInt(formData.categoryId)).length,
+        images: selectedImages,
       };
       setItems([...items, newItem]);
     } else if (editingId) {
@@ -118,6 +126,7 @@ export default function ItemManager({ onRefresh }: ItemManagerProps) {
                 categoryId: parseInt(formData.categoryId),
                 title: formData.title,
                 content: formData.content,
+                images: selectedImages,
               }
             : i
         )
@@ -127,6 +136,7 @@ export default function ItemManager({ onRefresh }: ItemManagerProps) {
     setIsAdding(false);
     setEditingId(null);
     setFormData({ categoryId: "", title: "", content: "" });
+    setSelectedImages([]);
     setError(null);
     onRefresh?.();
   };
@@ -142,6 +152,7 @@ export default function ItemManager({ onRefresh }: ItemManagerProps) {
     setIsAdding(false);
     setEditingId(null);
     setFormData({ categoryId: "", title: "", content: "" });
+    setSelectedImages([]);
     setError(null);
   };
 
@@ -209,6 +220,18 @@ export default function ItemManager({ onRefresh }: ItemManagerProps) {
               />
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                이미지 추가
+              </label>
+              <ImageUploader
+                onImagesSelected={(files) => {
+                  setSelectedImages(files);
+                }}
+                maxFiles={5}
+              />
+            </div>
+
             {error && (
               <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive text-sm">
                 {error}
@@ -264,6 +287,12 @@ export default function ItemManager({ onRefresh }: ItemManagerProps) {
                         <span className="inline-block px-2 py-1 text-xs font-medium bg-accent/10 text-accent rounded-md">
                           {getCategoryTitle(item.categoryId)}
                         </span>
+                        {item.images && item.images.length > 0 && (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-md">
+                            <ImageIcon className="h-3 w-3" />
+                            {item.images.length}개
+                          </span>
+                        )}
                       </div>
                       <h3 className="font-semibold text-foreground truncate mb-2">
                         {item.title}

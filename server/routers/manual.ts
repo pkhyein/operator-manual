@@ -11,6 +11,10 @@ import {
   createItem,
   updateItem,
   deleteItem,
+  createItemImage,
+  getItemImages,
+  deleteItemImage,
+  updateItemImageOrder,
 } from "../db";
 
 export const manualRouter = router({
@@ -127,5 +131,51 @@ export const manualRouter = router({
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {
       return await deleteItem(input.id);
+    }),
+
+  /**
+   * 항목 이미지 조회
+   */
+  getItemImages: publicProcedure
+    .input(z.object({ itemId: z.number() }))
+    .query(async ({ input }) => {
+      return await getItemImages(input.itemId);
+    }),
+
+  /**
+   * 항목 이미지 생성 (관리자만)
+   */
+  createItemImage: adminProcedure
+    .input(
+      z.object({
+        itemId: z.number(),
+        imageKey: z.string(),
+        imageUrl: z.string(),
+        imageName: z.string(),
+        mimeType: z.string().optional(),
+        size: z.number().optional(),
+        order: z.number().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      return await createItemImage(input);
+    }),
+
+  /**
+   * 항목 이미지 삭제 (관리자만)
+   */
+  deleteItemImage: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      return await deleteItemImage(input.id);
+    }),
+
+  /**
+   * 항목 이미지 순서 업데이트 (관리자만)
+   */
+  updateItemImageOrder: adminProcedure
+    .input(z.object({ id: z.number(), order: z.number() }))
+    .mutation(async ({ input }) => {
+      return await updateItemImageOrder(input.id, input.order);
     }),
 });

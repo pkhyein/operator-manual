@@ -15,6 +15,13 @@
       "when": 1768443669745,
       "tag": "0001_lumpy_lightspeed",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1768445658234,
+      "tag": "0002_soft_meltdown",
+      "breakpoints": true
     }
   ]
 }

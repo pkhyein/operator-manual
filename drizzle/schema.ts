@@ -92,3 +92,23 @@ export const searchLogs = mysqlTable("search_logs", {
 
 export type SearchLog = typeof searchLogs.$inferSelect;
 export type InsertSearchLog = typeof searchLogs.$inferInsert;
+
+/**
+ * 매뉴얼 항목 이미지 테이블
+ * 각 항목에 첨부된 이미지들을 관리
+ */
+export const manualItemImages = mysqlTable("manual_item_images", {
+  id: int("id").autoincrement().primaryKey(),
+  itemId: int("itemId").notNull(),
+  imageKey: varchar("imageKey", { length: 512 }).notNull(),
+  imageUrl: text("imageUrl").notNull(),
+  imageName: varchar("imageName", { length: 255 }).notNull(),
+  mimeType: varchar("mimeType", { length: 100 }),
+  size: int("size"),
+  order: int("order").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ManualItemImage = typeof manualItemImages.$inferSelect;
+export type InsertManualItemImage = typeof manualItemImages.$inferInsert;
